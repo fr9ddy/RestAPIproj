@@ -4,51 +4,61 @@ using Microsoft.AspNetCore.Mvc;
 namespace ToDoApi.Controllers;
 
 [ApiController]
-[Route("api/todo")]
+[Route("todo")]
 public class TodoController : ControllerBase
 {
+
+    //HTTP LIST REQUESTS
     private readonly TodoService _service;
     public TodoController(TodoService service)
     {
         _service = service;
     }
 
-    [HttpPost]
-    public ActionResult<TodoItem> AddTask([FromBody] CreateTaskDto dto)
+    [HttpPost("lists")]
+    public ActionResult<TodoList> CreateList([FromBody] CreateListDto dto)
     {
-        var created = _service.AddTask(dto.Title, dto.ListId);
-        return CreatedAtAction(nameof(GetTaskById), new { id = created.Id }, created);
+        var created = _service.CreateList(dto.Name);
+        return CreatedAtAction(nameof(GetListById), new { listId = created.Id}, created);
     }
 
-    [HttpGet("{id}")]
-    public ActionResult<TodoItem> GetTaskById(int id)
+    [HttpGet("lists")]
+    public ActionResult<List<TodoList>> GetLists()
     {
-        var item = _service.GetTaskById(id);
-        return Ok(item);
+        var item = _service.GetLists();
+        return Ok(item); // Returns 200
+    }
+
+    [HttpGet("lists/{listId}")]
+    public ActionResult<TodoList> GetListById(int listId)
+    {
+        return Ok(_service.GetListById(listId)); //Returns 200
     }
     
-    [HttpGet]
-    public ActionResult<List<TodoItem>> GetTasks()
+    [HttpDelete("lists/{listId}")]
+    public IActionResult DeleteList(int listId)
     {
-        return Ok(_service.GetTasks());
+        _service.DeleteList(listId);
+        return NoContent(); // Returns 204 (no content)
+    }
+    //HTTP TASK REQUESTS
+
+    [HttpPost("lists/{listId}/tasks")]
+    public ActionResult<TodoItem> AddTask(int listId, [FromBody] CreateTaskDto dto)
+    {
+        var created = _service.AddTask(listId, dto.Name);
+        return CreatedAtAction(nameof(GetTaskById), new { listId = listId, taskId = created.Id}, created);
     }
 
-    [HttpPut("{id}/complete")]
-    public IActionResult CompleteTask(int id)
+    [HttpGet("lists/{listId}/tasks")]
+    public ActionResult<TodoItem> GetTasksByListId(int listId)
     {
-        return Ok(_service.CompleteTask(id));
+        return Ok(_service.GetTasksByListId(listId));
     }
 
-    [HttpDelete("{id}")]
-    public IActionResult DeleteTask(int id)
+    [HttpGet("lists/{listId}/tasks/{taskId}")]
+    public ActionResult<TodoItem> GetTaskById(int listId, int taskId)
     {
-        return Ok(_service.DeleteTask(id));
-    }
-
-    [HttpGet("list/{listId}")]
-    public ActionResult GetListById(int listId)
-    {
-        var list = _service.GetListById(listId);
-        return Ok(list);
+        return Ok(_service.GetTaskById(listId, taskId));
     }
 }
