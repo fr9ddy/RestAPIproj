@@ -9,13 +9,13 @@
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
     :root {
-      --bg: #f5f2eb;
-      --ink: #1a1814;
-      --muted: #8a8070;
+      --bg: #141414;
+      --ink: #e8e4dc;
+      --muted: #5a5650;
       --accent: #c84b2f;
-      --border: #d8d0c0;
-      --card: #fdfaf5;
-      --done: #7a9e7e;
+      --border: #2a2825;
+      --card: #1c1c1a;
+      --done: #4a7a50;
     }
 
     body {
@@ -261,8 +261,8 @@
       text-transform: uppercase;
     }
 
-    .badge.pending { background: #f0e8d8; color: #8a6a40; }
-    .badge.done { background: #ddeedd; color: #4a7a50; }
+    .badge.pending { background: #2a2418; color: #a08050; }
+    .badge.done { background: #1a2e1e; color: #6aaa70; }
 
     .task-id { color: var(--muted); font-size: 0.72rem; }
 
@@ -525,7 +525,7 @@
 
   async function completeTask(taskId) {
     try {
-      await apiFetch(`/lists/${selectedListId}/tasks/${taskId}/complete`, { method: 'PUT' });
+      await apiFetch(`/lists/${selectedListId}/tasks/${taskId}/complete`, { method: 'PATCH' });
       await loadTasks();
     } catch {
       showToast('Failed to complete task', true);

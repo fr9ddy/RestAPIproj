@@ -46,8 +46,29 @@ public class TodoController : ControllerBase
     [HttpPost("lists/{listId}/tasks")]
     public ActionResult<TodoItem> AddTask(int listId, [FromBody] CreateTaskDto dto)
     {
-        var created = _service.AddTask(listId, dto.Name);
-        return CreatedAtAction(nameof(GetTaskById), new { listId = listId, taskId = created.Id}, created);
+        try
+        {
+            var created = _service.AddTask(listId, dto.Name);
+            return Ok(created);
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, ex.Message);
+        }
+    }
+
+    [HttpPatch("lists/{listId}/tasks/{taskId}/complete")]
+    public IActionResult CompleteTask(int listId, int taskId)
+    {
+        _service.CompleteTask(taskId);
+        return NoContent();
+    }
+
+    [HttpDelete("lists/{listId}/tasks/{taskId}")]
+    public IActionResult DeleteTask(int listId, int taskId)
+    {
+        _service.DeleteTask(taskId);
+        return NoContent();
     }
 
     [HttpGet("lists/{listId}/tasks")]
