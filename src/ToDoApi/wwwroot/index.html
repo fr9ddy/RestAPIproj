@@ -1,0 +1,559 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Todo</title>
+  <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet"/>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #f5f2eb;
+      --ink: #1a1814;
+      --muted: #8a8070;
+      --accent: #c84b2f;
+      --border: #d8d0c0;
+      --card: #fdfaf5;
+      --done: #7a9e7e;
+    }
+
+    body {
+      background: var(--bg);
+      color: var(--ink);
+      font-family: 'DM Mono', monospace;
+      min-height: 100vh;
+      padding: 0;
+    }
+
+    /* HEADER */
+    header {
+      border-bottom: 2px solid var(--ink);
+      padding: 2rem 3rem;
+      display: flex;
+      align-items: baseline;
+      gap: 1rem;
+      background: var(--bg);
+      position: sticky;
+      top: 0;
+      z-index: 10;
+    }
+
+    header h1 {
+      font-family: 'Instrument Serif', serif;
+      font-size: 2.2rem;
+      font-weight: 400;
+      letter-spacing: -0.02em;
+    }
+
+    header span {
+      font-size: 0.75rem;
+      color: var(--muted);
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+    }
+
+    /* LAYOUT */
+    .layout {
+      display: grid;
+      grid-template-columns: 280px 1fr;
+      min-height: calc(100vh - 81px);
+    }
+
+    /* SIDEBAR */
+    aside {
+      border-right: 2px solid var(--ink);
+      padding: 2rem 1.5rem;
+      background: var(--card);
+    }
+
+    .sidebar-label {
+      font-size: 0.65rem;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 1rem;
+    }
+
+    .list-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0.6rem 0.8rem;
+      cursor: pointer;
+      border: 1px solid transparent;
+      border-radius: 2px;
+      transition: all 0.15s;
+      font-size: 0.85rem;
+      margin-bottom: 0.3rem;
+      gap: 0.5rem;
+    }
+
+    .list-item:hover { background: var(--bg); border-color: var(--border); }
+    .list-item.active {
+      background: var(--ink);
+      color: var(--bg);
+      border-color: var(--ink);
+    }
+
+    .list-item .list-name { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+    .delete-list-btn {
+      background: none;
+      border: none;
+      cursor: pointer;
+      color: var(--muted);
+      font-size: 1rem;
+      padding: 0 0.2rem;
+      line-height: 1;
+      opacity: 0;
+      transition: opacity 0.15s;
+      flex-shrink: 0;
+    }
+
+    .list-item:hover .delete-list-btn,
+    .list-item.active .delete-list-btn { opacity: 1; }
+    .list-item.active .delete-list-btn { color: #e8b8b0; }
+    .delete-list-btn:hover { color: var(--accent) !important; }
+
+    .new-list-form {
+      margin-top: 1.5rem;
+      padding-top: 1.5rem;
+      border-top: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+    }
+
+    input[type="text"] {
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 2px;
+      padding: 0.5rem 0.7rem;
+      font-family: 'DM Mono', monospace;
+      font-size: 0.8rem;
+      color: var(--ink);
+      width: 100%;
+      transition: border-color 0.15s;
+    }
+
+    input[type="text"]:focus {
+      outline: none;
+      border-color: var(--ink);
+    }
+
+    input[type="text"]::placeholder { color: var(--muted); }
+
+    button.primary {
+      background: var(--ink);
+      color: var(--bg);
+      border: none;
+      padding: 0.5rem 0.8rem;
+      font-family: 'DM Mono', monospace;
+      font-size: 0.75rem;
+      letter-spacing: 0.05em;
+      cursor: pointer;
+      border-radius: 2px;
+      transition: background 0.15s;
+    }
+
+    button.primary:hover { background: var(--accent); }
+
+    /* MAIN */
+    main {
+      padding: 2.5rem 3rem;
+    }
+
+    .main-header {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      margin-bottom: 2rem;
+      padding-bottom: 1rem;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .main-title {
+      font-family: 'Instrument Serif', serif;
+      font-size: 1.8rem;
+      font-weight: 400;
+      font-style: italic;
+    }
+
+    .task-count {
+      font-size: 0.7rem;
+      color: var(--muted);
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+    }
+
+    /* ADD TASK */
+    .add-task-form {
+      display: flex;
+      gap: 0.5rem;
+      margin-bottom: 2rem;
+    }
+
+    .add-task-form input { flex: 1; }
+
+    /* TASK TABLE */
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.82rem;
+    }
+
+    thead tr {
+      border-bottom: 2px solid var(--ink);
+    }
+
+    th {
+      text-align: left;
+      padding: 0.5rem 0.8rem;
+      font-size: 0.65rem;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--muted);
+      font-weight: 500;
+    }
+
+    tbody tr {
+      border-bottom: 1px solid var(--border);
+      transition: background 0.1s;
+      animation: fadeIn 0.2s ease;
+    }
+
+    tbody tr:hover { background: var(--card); }
+
+    td {
+      padding: 0.75rem 0.8rem;
+      vertical-align: middle;
+    }
+
+    .task-title {
+      display: flex;
+      align-items: center;
+      gap: 0.7rem;
+    }
+
+    .task-title.done span { text-decoration: line-through; color: var(--muted); }
+
+    .status-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--border);
+      border: 1.5px solid var(--muted);
+      flex-shrink: 0;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+
+    .status-dot.done { background: var(--done); border-color: var(--done); }
+    .status-dot:hover { border-color: var(--accent); }
+
+    .badge {
+      display: inline-block;
+      padding: 0.2rem 0.5rem;
+      border-radius: 2px;
+      font-size: 0.65rem;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+
+    .badge.pending { background: #f0e8d8; color: #8a6a40; }
+    .badge.done { background: #ddeedd; color: #4a7a50; }
+
+    .task-id { color: var(--muted); font-size: 0.72rem; }
+
+    .action-btn {
+      background: none;
+      border: 1px solid var(--border);
+      color: var(--muted);
+      padding: 0.3rem 0.6rem;
+      font-family: 'DM Mono', monospace;
+      font-size: 0.7rem;
+      cursor: pointer;
+      border-radius: 2px;
+      transition: all 0.15s;
+    }
+
+    .action-btn:hover { border-color: var(--accent); color: var(--accent); }
+
+    /* EMPTY STATE */
+    .empty {
+      text-align: center;
+      padding: 4rem 2rem;
+      color: var(--muted);
+    }
+
+    .empty .big { font-family: 'Instrument Serif', serif; font-size: 3rem; opacity: 0.3; }
+    .empty p { font-size: 0.8rem; margin-top: 0.5rem; letter-spacing: 0.05em; }
+
+    .no-list {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      height: 100%;
+      flex-direction: column;
+      gap: 1rem;
+      color: var(--muted);
+    }
+
+    .no-list .arrow { font-size: 2rem; opacity: 0.3; animation: nudge 2s ease-in-out infinite; }
+    .no-list p { font-size: 0.8rem; letter-spacing: 0.05em; }
+
+    /* TOAST */
+    #toast {
+      position: fixed;
+      bottom: 2rem;
+      right: 2rem;
+      background: var(--ink);
+      color: var(--bg);
+      padding: 0.7rem 1.2rem;
+      font-size: 0.78rem;
+      border-radius: 2px;
+      opacity: 0;
+      transform: translateY(10px);
+      transition: all 0.2s;
+      pointer-events: none;
+      z-index: 100;
+    }
+
+    #toast.show { opacity: 1; transform: translateY(0); }
+    #toast.error { background: var(--accent); }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(-4px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    @keyframes nudge {
+      0%, 100% { transform: translateX(0); }
+      50% { transform: translateX(-6px); }
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <h1>Todo</h1>
+  <span>local api</span>
+</header>
+
+<div class="layout">
+  <aside>
+    <div class="sidebar-label">Lists</div>
+    <div id="lists-container"></div>
+    <div class="new-list-form">
+      <input type="text" id="new-list-input" placeholder="New list name..." />
+      <button class="primary" onclick="createList()">+ Create list</button>
+    </div>
+  </aside>
+
+  <main id="main-content">
+    <div class="no-list">
+      <div class="arrow">←</div>
+      <p>Select a list to get started</p>
+    </div>
+  </main>
+</div>
+
+<div id="toast"></div>
+
+<script>
+  const API = '/todo';
+  let selectedListId = null;
+  let selectedListName = null;
+
+  // --- TOAST ---
+  function showToast(msg, isError = false) {
+    const t = document.getElementById('toast');
+    t.textContent = msg;
+    t.className = 'show' + (isError ? ' error' : '');
+    clearTimeout(t._timer);
+    t._timer = setTimeout(() => t.className = '', 2500);
+  }
+
+  // --- FETCH HELPERS ---
+  async function apiFetch(path, options = {}) {
+    const res = await fetch(API + path, {
+      headers: { 'Content-Type': 'application/json' },
+      ...options
+    });
+    if (!res.ok) throw new Error(`${res.status}`);
+    if (res.status === 204) return null;
+    return res.json();
+  }
+
+  // --- LISTS ---
+  async function loadLists() {
+    try {
+      const lists = await apiFetch('/lists');
+      renderLists(lists);
+    } catch {
+      showToast('Could not load lists', true);
+    }
+  }
+
+  function renderLists(lists) {
+    const container = document.getElementById('lists-container');
+    if (!lists.length) {
+      container.innerHTML = '<div style="font-size:0.75rem;color:var(--muted);padding:0.5rem 0.8rem;">No lists yet</div>';
+      return;
+    }
+    container.innerHTML = lists.map(l => `
+      <div class="list-item ${l.id === selectedListId ? 'active' : ''}" onclick="selectList(${l.id}, '${escHtml(l.name)}')">
+        <span class="list-name">${escHtml(l.name)}</span>
+        <button class="delete-list-btn" onclick="event.stopPropagation(); deleteList(${l.id})" title="Delete list">×</button>
+      </div>
+    `).join('');
+  }
+
+  async function createList() {
+    const input = document.getElementById('new-list-input');
+    const name = input.value.trim();
+    if (!name) return;
+    try {
+      await apiFetch('/lists', { method: 'POST', body: JSON.stringify({ name }) });
+      input.value = '';
+      showToast(`List "${name}" created`);
+      await loadLists();
+    } catch {
+      showToast('Failed to create list', true);
+    }
+  }
+
+  async function deleteList(id) {
+    if (!confirm('Delete this list and all its tasks?')) return;
+    try {
+      await apiFetch(`/lists/${id}`, { method: 'DELETE' });
+      if (selectedListId === id) {
+        selectedListId = null;
+        selectedListName = null;
+        document.getElementById('main-content').innerHTML = `
+          <div class="no-list">
+            <div class="arrow">←</div>
+            <p>Select a list to get started</p>
+          </div>`;
+      }
+      showToast('List deleted');
+      await loadLists();
+    } catch {
+      showToast('Failed to delete list', true);
+    }
+  }
+
+  function selectList(id, name) {
+    selectedListId = id;
+    selectedListName = name;
+    loadLists();
+    loadTasks();
+  }
+
+  // --- TASKS ---
+  async function loadTasks() {
+    try {
+      const tasks = await apiFetch(`/lists/${selectedListId}/tasks`);
+      renderTasks(tasks);
+    } catch {
+      showToast('Could not load tasks', true);
+    }
+  }
+
+  function renderTasks(tasks) {
+    const done = tasks.filter(t => t.isComplete).length;
+    const main = document.getElementById('main-content');
+    main.innerHTML = `
+      <div class="main-header">
+        <div class="main-title">${escHtml(selectedListName)}</div>
+        <div class="task-count">${done} / ${tasks.length} complete</div>
+      </div>
+      <div class="add-task-form">
+        <input type="text" id="new-task-input" placeholder="Add a task..." onkeydown="if(event.key==='Enter') addTask()" />
+        <button class="primary" onclick="addTask()">+ Add</button>
+      </div>
+      ${tasks.length === 0 ? `
+        <div class="empty">
+          <div class="big">—</div>
+          <p>No tasks yet. Add one above.</p>
+        </div>
+      ` : `
+        <table>
+          <thead>
+            <tr>
+              <th style="width:40px">#</th>
+              <th>Task</th>
+              <th style="width:100px">Status</th>
+              <th style="width:80px"></th>
+            </tr>
+          </thead>
+          <tbody>
+            ${tasks.map(t => `
+              <tr id="task-row-${t.id}">
+                <td class="task-id">${t.id}</td>
+                <td>
+                  <div class="task-title ${t.isComplete ? 'done' : ''}">
+                    <div class="status-dot ${t.isComplete ? 'done' : ''}" onclick="completeTask(${t.id})" title="Mark complete"></div>
+                    <span>${escHtml(t.title)}</span>
+                  </div>
+                </td>
+                <td><span class="badge ${t.isComplete ? 'done' : 'pending'}">${t.isComplete ? 'Done' : 'Pending'}</span></td>
+                <td><button class="action-btn" onclick="deleteTask(${t.id})">Delete</button></td>
+              </tr>
+            `).join('')}
+          </tbody>
+        </table>
+      `}
+    `;
+    document.getElementById('new-task-input')?.focus();
+  }
+
+  async function addTask() {
+    const input = document.getElementById('new-task-input');
+    if (!input) return;
+    const name = input.value.trim();
+    if (!name) return;
+    try {
+      await apiFetch(`/lists/${selectedListId}/tasks`, { method: 'POST', body: JSON.stringify({ name }) });
+      showToast('Task added');
+      await loadTasks();
+    } catch {
+      showToast('Failed to add task', true);
+    }
+  }
+
+  async function completeTask(taskId) {
+    try {
+      await apiFetch(`/lists/${selectedListId}/tasks/${taskId}/complete`, { method: 'PUT' });
+      await loadTasks();
+    } catch {
+      showToast('Failed to complete task', true);
+    }
+  }
+
+  async function deleteTask(taskId) {
+    try {
+      await apiFetch(`/lists/${selectedListId}/tasks/${taskId}`, { method: 'DELETE' });
+      showToast('Task deleted');
+      await loadTasks();
+    } catch {
+      showToast('Failed to delete task', true);
+    }
+  }
+
+  // --- UTILS ---
+  function escHtml(str) {
+    return String(str ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  }
+
+  // Enter key for new list
+  document.getElementById('new-list-input').addEventListener('keydown', e => {
+    if (e.key === 'Enter') createList();
+  });
+
+  // Init
+  loadLists();
+</script>
+</body>
+</html>

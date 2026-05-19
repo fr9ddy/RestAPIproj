@@ -18,6 +18,7 @@ public class TodoService
         _db.SaveChanges();
         return item;
     }
+
     public TodoList CreateList(string name)
     {
         var list = new TodoList { Name = name };
@@ -36,6 +37,7 @@ public class TodoService
         task.IsComplete = true;
         _db.SaveChanges();
     }
+    
     public void DeleteTask(int id)
     {
         var task = _db.TodoItems.FirstOrDefault(t => t.Id == id);
