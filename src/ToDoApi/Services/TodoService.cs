@@ -37,7 +37,7 @@ public class TodoService
         task.IsComplete = true;
         _db.SaveChanges();
     }
-    
+
     public void DeleteTask(int id)
     {
         var task = _db.TodoItems.FirstOrDefault(t => t.Id == id);
@@ -46,39 +46,46 @@ public class TodoService
         {
             throw new KeyNotFoundException();
         }
-       _db.Remove(task);
-       _db.SaveChanges();
+        task.IsDeleted = true;
+        _db.SaveChanges();
     }
+    
     public void DeleteList(int id)
     {
         var list = _db.TodoLists.FirstOrDefault(l => l.Id == id);
-
-        if(list == null)
-        {
-            throw new KeyNotFoundException();
+        if(list == null) 
+        { 
+            throw new KeyNotFoundException(); 
         }
-        _db.Remove(list);
+        var tasks = _db.TodoItems.Where(t => t.ListId == id).ToList();
+        foreach(var task in tasks)
+        {
+            task.IsDeleted = true;
+        }
+        list.IsDeleted = true;
         _db.SaveChanges();
     }
+
     public List<TodoList> GetLists()
     {
-        return _db.TodoLists.ToList();
+        return _db.TodoLists.Where(t => !t.IsDeleted).ToList();
     }
 
     public List<TodoItem> GetTasksByListId(int listId)
     {
-        return _db.TodoItems.Where(t => t.ListId == listId).ToList();
+        return _db.TodoItems.Where(t => t.ListId == listId && !t.IsDeleted).ToList();
     }
+
     public TodoItem GetTaskById(int listId, int taskId)
     {
-        var task = _db.TodoItems.FirstOrDefault(t => t.Id == taskId && t.ListId == listId);
+        var task = _db.TodoItems.FirstOrDefault(t => t.Id == taskId && t.ListId == listId && !t.IsDeleted);
         if (task == null) throw new KeyNotFoundException();
         return task;
     }
     
     public TodoList GetListById(int id)
     {
-        var list = _db.TodoLists.FirstOrDefault(l => l.Id == id);
+        var list = _db.TodoLists.FirstOrDefault(l => l.Id == id && !l.IsDeleted);
         if (list == null)
         {
             throw new KeyNotFoundException();

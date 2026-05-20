@@ -5,4 +5,5 @@ public class TodoItem
     public bool IsComplete { get; set; }
     public int ListId { get; set; }
     public TodoList? List { get; set; }
+    public bool IsDeleted { get; set; }
 }
